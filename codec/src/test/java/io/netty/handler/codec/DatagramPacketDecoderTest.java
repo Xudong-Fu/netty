@@ -17,6 +17,8 @@ package io.netty.handler.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.AddressedEnvelope;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.string.StringDecoder;
@@ -27,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,5 +58,32 @@ public class DatagramPacketDecoderTest {
         ByteBuf content = Unpooled.wrappedBuffer("netty".getBytes(CharsetUtil.UTF_8));
         assertTrue(channel.writeInbound(new DatagramPacket(content, recipient, sender)));
         assertEquals("netty", channel.readInbound());
+    }
+
+    @Test
+    public void testNotSharable() {
+        DatagramPacketDecoder decoder = new DatagramPacketDecoder(new MessageToMessageDecoder<ByteBuf>() {
+            @Override
+            protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+                // NOOP
+            }
+        });
+        assertFalse(decoder.isSharable());
+    }
+
+    @Test
+    public void testSharable() {
+        DatagramPacketDecoder decoder = new DatagramPacketDecoder(new MessageToMessageDecoder<ByteBuf>() {
+            @Override
+            protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+                // NOOP
+            }
+
+            @Override
+            public boolean isSharable() {
+                return true;
+            }
+        });
+        assertTrue(decoder.isSharable());
     }
 }
